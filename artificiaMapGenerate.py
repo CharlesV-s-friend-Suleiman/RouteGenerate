@@ -7,7 +7,7 @@ GRIDSIZE_COL = 100
 
 # artificial data generation
 modellist = [['Railway', 300,'R'],
-                ['Other', 60,'O'],
+                ['Other', 70,'O'],
              ['Highway', 120,'H']]
 
 
@@ -58,7 +58,7 @@ def generate_route_bresenham(start: tuple, end: tuple):
     return route
 
 
-def generate_records(size: int, storepath:str) -> list:
+def generate_roadnet(size: int, storepath:str) -> list:
     records = []
     existing_points = {mode: [] for mode in [model[0] for model in modellist]}
     for i in range(size):
@@ -84,8 +84,8 @@ def generate_records(size: int, storepath:str) -> list:
     return records
 
 
-# artificial_records = generate_records(20, 'data/artificial_records.pkl')
-with open('data/artificial_records.pkl', 'rb') as f:
-    artificial_records = pickle.load(f)
+#artificial_network = generate_roadnet(25, 'data/artificial_network.pkl')
+with open('data/artificial_network.pkl', 'rb') as f:
+    artificial_network = pickle.load(f)
 
-
+print(artificial_network)
