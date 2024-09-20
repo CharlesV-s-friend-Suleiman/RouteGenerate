@@ -31,7 +31,21 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/data/artificial_traj_mixed.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/data/realWorldFeature.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/data/realWorldMixedFeatures.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
