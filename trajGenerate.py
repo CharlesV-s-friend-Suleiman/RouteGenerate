@@ -192,7 +192,7 @@ def generate_traj_single(real_map, size:int, mode:str, time_interval = 6) -> pd.
     while i < size: # for each trajectory
         traj_id = mode + str(i + 1)
         if mode == "TG": # highspeed rail, must start from station
-            start , _ = random.choice([(k,v) for k,v in real_map.items() if v[4] & 1 == 1])
+            start , _ = random.choice([(k,v) for k,v in real_map.items() if (v[4] & 1 == 1 and v[4] >> 1 & 1 == 1)])
         elif mode == "GG": #highway, must start from highway zoll
             start , _ = random.choice([(k,v) for k,v in real_map.items() if (v[4]) >>4 & 1 == 1 ])
         elif mode == 'GSD': # normal road
@@ -290,7 +290,7 @@ def generate_traj_mixed(real_map, size:int, mode:str, time_interval=6)-> pd.Data
         if mode.startswith('TG'): # start from TG station
             start , _ = random.choice([(k,v) for k,v in real_map.items() if (v[4] & 1 == 1 and v[4] >>1 & 1 == 1)])
         elif mode.startswith("GSD"): # start from GSD
-            start , _ = random.choice([(k,v) for k,v in real_map.items() if (v[4] >> 2 & 1 == 1 and v[4] >>5 & 1 == 1)])
+            start , _ = random.choice([(k,v) for k,v in real_map.items() if (v[4] >> 2 & 1 == 1 or v[4] >>5 & 1 == 1)])
         elif mode.startswith("GG"): # start from GG zoll
             start , _ = random.choice([(k,v) for k,v in real_map.items() if (v[4] >> 3 & 1 == 1 and v[4] >>4 & 1 == 1)])
         elif mode.startswith("TS"): # start from TS station
