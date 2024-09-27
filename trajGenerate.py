@@ -186,6 +186,7 @@ def generate_traj_single(real_map, size:int, mode:str, time_interval = 6) -> pd.
     :return: pandas.DataFrame with columns = ["traj_id", "time", "locx", "locy", "travel_mode"]
     """
     df = pd.DataFrame(columns = ["ID", "time", "locx", "locy", "mode"])
+    route_df = pd.DataFrame(columns = ["ID",  "locx", "locy"])
     # the trajectory information includes route_id which can indicate travel mode
 
     i = 0
@@ -208,8 +209,11 @@ def generate_traj_single(real_map, size:int, mode:str, time_interval = 6) -> pd.
         route_list = [] # list of (x,y) in order
 
         current_pos = start
+        sub_route_df = pd.DataFrame(columns=["ID", "locx", "locy"])
         while cnt < expected_sample_len:
             current_x, current_y = current_pos[0], current_pos[1]
+            sub_route_df = sub_route_df._append(pd.DataFrame([[traj_id, current_x, current_y]], columns=["ID", "locx", "locy"]))
+
             route_list.append(current_pos)
             hashmap.add(current_pos)
             cnt += 1
@@ -238,7 +242,7 @@ def generate_traj_single(real_map, size:int, mode:str, time_interval = 6) -> pd.
         # with the hypothesis that the route length in each grid is 1 km, this can be proved by real-data distribution
         sub_df = pd.DataFrame(columns=["ID", "time", "locx", "locy", "mode"])
         while j < len(route_list):
-            timestep = time_interval + _bias('normal',-1,1)
+            timestep = time_interval + _bias('normal',0,1)
             timestamp += timestep
             spacestep = int(v + _bias('uniform', - mode_vbias_dict[mode], mode_vbias_dict[mode])) * timestep / 60
             traj_len += 1
@@ -250,17 +254,19 @@ def generate_traj_single(real_map, size:int, mode:str, time_interval = 6) -> pd.
                                       locx + int(_bias('uniform',-1.5,1.5)),
                                       locy + int(_bias('uniform',-1.5,1.5)),
                                       mode]], columns=["ID", "time", "locx", "locy", "mode"])
-            sub_df = sub_df._append(newpoint)
+            sub_df = pd.concat([sub_df, newpoint], ignore_index=True)
 
         # traj with enough len will be saved
         if traj_len >= mode_len_dict[mode]:
-            df = df._append(sub_df)
+            df = pd.concat([df, sub_df], ignore_index=True)
+            route_df = pd.concat([route_df, sub_route_df], ignore_index=True)
             i += 1
         # else delete traj generated in this iteration
         else:
             del sub_df
+            del sub_route_df
 
-    return df
+    return df, route_df
 
 def generate_traj_mixed(real_map, size:int, mode:str, time_interval=6)-> pd.DataFrame:
     """
@@ -281,6 +287,7 @@ def generate_traj_mixed(real_map, size:int, mode:str, time_interval=6)-> pd.Data
     :return :
     """
     df = pd.DataFrame(columns = ["ID", "time", "locx", "locy", "mode"])
+    route_df = pd.DataFrame(columns = ["ID",  "locx", "locy"])
     # the trajectory information includes route_id which can indicate travel mode
 
     i = 0
@@ -312,6 +319,7 @@ def generate_traj_mixed(real_map, size:int, mode:str, time_interval=6)-> pd.Data
         # to get a total route with expected_sample_len, including 1 mode change
         while cnt < expected_sample_len:
             current_x, current_y = current_pos[0], current_pos[1]
+            route_df = route_df._append(pd.DataFrame([[traj_id, current_x, current_y]], columns=["ID", "locx", "locy"]))
             route_list.append(current_pos)
             hashmap.add(current_pos)
             cnt += 1
@@ -354,7 +362,7 @@ def generate_traj_mixed(real_map, size:int, mode:str, time_interval=6)-> pd.Data
         # sample traj with time_interval from the full trajectory, former part with current_mode, latter part with next_mode
         sub_df = pd.DataFrame(columns=["ID", "time", "locx", "locy", "mode"])
         while j < change_idx:
-            timestep = time_interval + _bias('normal',-1,1)
+            timestep = time_interval + _bias('normal',0,1)
             timestamp += timestep
             spacestep = int(current_v + _bias('uniform', - mode_vbias_dict[former_mode], mode_vbias_dict[former_mode])) * timestep / 60
             traj_len += 1
@@ -365,14 +373,15 @@ def generate_traj_mixed(real_map, size:int, mode:str, time_interval=6)-> pd.Data
                                       locx + int(_bias('uniform',-1.5,1.5)),
                                       locy + int(_bias('uniform',-1.5,1.5)),
                                       former_mode]], columns=["ID", "time", "locx", "locy", "mode"])
-            sub_df = sub_df._append(newpoint)
+            sub_df = pd.concat([sub_df, newpoint], ignore_index=True)
         # the record of station stop, 4 min for TG and 7 min for TS
         timestamp += 4 if former_mode == 'TG' else 7
-        sub_df = sub_df._append(pd.DataFrame([[traj_id,
+        sub_df = pd.concat( [sub_df, pd.DataFrame([[traj_id,
                                       timestamp,
                                       route_list[change_idx][0] + int(_bias('uniform',-1.5,1.5)),
                                       route_list[change_idx][1] + int(_bias('uniform',-1.5,1.5)),
-                                      0]], columns=["ID", "time", "locx", "locy", "mode"]))
+                                      0]], columns=["ID", "time", "locx", "locy", "mode"]) ]
+                            , ignore_index=True)
         # latter part
         while j < len(route_list)-1:
             timestep = time_interval + _bias('normal',-1,1)
@@ -389,11 +398,11 @@ def generate_traj_mixed(real_map, size:int, mode:str, time_interval=6)-> pd.Data
             sub_df = sub_df._append(newpoint)
 
         if traj_len >= 6:
-            df = df._append(sub_df)
+            df = pd.concat([df, sub_df], ignore_index=True)
             i += 1
         else:
             del sub_df
-    return df
+    return df, route_df
 
 
 # generate traj with route
@@ -406,17 +415,19 @@ def generate_traj_mixed(real_map, size:int, mode:str, time_interval=6)-> pd.Data
 # generate traj with grid
 with open('data/GridModesAdjacentRes.pkl', 'rb') as f:
     real_map_data = pickle.load(f)
-    traj_GG = generate_traj_single(real_map_data, size=100, mode='GG')
-    traj_GSD = generate_traj_single(real_map_data, size=100, mode='GSD')
-    traj_TS = generate_traj_single(real_map_data, size=100, mode='TS')
-    traj_TG = generate_traj_single(real_map_data, size=100, mode='TG')
+    traj_GG, rts_GG = generate_traj_single(real_map_data, size=50, mode='GG')
+    traj_GSD, rts_GSD = generate_traj_single(real_map_data, size=50, mode='GSD')
+    traj_TS, rts_TS = generate_traj_single(real_map_data, size=50, mode='TS')
+    traj_TG, rts_TG = generate_traj_single(real_map_data, size=50, mode='TG')
 
-    traj_TG_GSD = generate_traj_mixed(real_map_data, size=100, mode='TG-GSD')
-    traj_GSD_TG = generate_traj_mixed(real_map_data, size=100, mode='GSD-TG')
-    traj_TS_TG = generate_traj_mixed(real_map_data, size=100, mode='TS-TG')
-    traj_TG_TS = generate_traj_mixed(real_map_data, size=100, mode='TG-TS')
-    traj_GSD_GG = generate_traj_mixed(real_map_data, size=100, mode='GSD-GG')
-    traj_GG_GSD = generate_traj_mixed(real_map_data, size=100, mode='GG-GSD')
-
-    traj = pd.concat([traj_GG, traj_GSD, traj_TS, traj_TG, traj_TG_GSD, traj_GSD_TG, traj_TS_TG, traj_TG_TS, traj_GSD_GG, traj_GG_GSD])
+    rts = pd.concat([rts_GG, rts_GSD, rts_TS, rts_TG])
+    traj = pd.concat([traj_GG, traj_GSD, traj_TS, traj_TG])
     traj.to_csv('data/artificial_traj_mixed.csv', index=False)
+    rts.to_csv('data/artificial_rts_mixed.csv', index=False)
+
+""" traj_TG_GSD ,rts_TG_GSD= generate_traj_mixed(real_map_data, size=50, mode='TG-GSD')
+    traj_GSD_TG ,rts_GSD_TG = generate_traj_mixed(real_map_data, size=50, mode='GSD-TG')
+    traj_TS_TG ,rts_TS_TG = generate_traj_mixed(real_map_data, size=50, mode='TS-TG')
+    traj_TG_TS ,rts_TG_TS = generate_traj_mixed(real_map_data, size=50, mode='TG-TS')
+    traj_GSD_GG ,rts_GSD_GG = generate_traj_mixed(real_map_data, size=50, mode='GSD-GG')
+    traj_GG_GSD ,rts_GG_GSD = generate_traj_mixed(real_map_data, size=50, mode='GG-GSD')"""
