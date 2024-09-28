@@ -240,7 +240,7 @@ def generate_traj_single(real_map, size:int, mode:str, time_interval = 6) -> pd.
         traj_len = 0
 
         # with the hypothesis that the route length in each grid is 1 km, this can be proved by real-data distribution
-        sub_df = pd.DataFrame(columns=["ID", "time", "locx", "locy", "mode"])
+        sub_df = pd.DataFrame([[traj_id, timestamp,route_list[0][0],route_list[0][1],mode]],columns=["ID", "time", "locx", "locy", "mode"])
         while j < len(route_list):
             timestep = time_interval + _bias('normal',0,1)
             timestamp += timestep
