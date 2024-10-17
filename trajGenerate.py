@@ -415,19 +415,25 @@ def generate_traj_mixed(real_map, size:int, mode:str, time_interval=6)-> pd.Data
 # generate traj with grid
 with open('data/GridModesAdjacentRes.pkl', 'rb') as f:
     real_map_data = pickle.load(f)
-    traj_GG, rts_GG = generate_traj_single(real_map_data, size=50, mode='GG')
-    traj_GSD, rts_GSD = generate_traj_single(real_map_data, size=50, mode='GSD')
-    traj_TS, rts_TS = generate_traj_single(real_map_data, size=50, mode='TS')
-    traj_TG, rts_TG = generate_traj_single(real_map_data, size=50, mode='TG')
+    traj_GG, rts_GG = generate_traj_single(real_map_data, size=200, mode='GG')
+    traj_GSD, rts_GSD = generate_traj_single(real_map_data, size=200, mode='GSD')
+    traj_TS, rts_TS = generate_traj_single(real_map_data, size=200, mode='TS')
+    traj_TG, rts_TG = generate_traj_single(real_map_data, size=200, mode='TG')
 
-    rts = pd.concat([rts_GG, rts_GSD, rts_TS, rts_TG])
-    traj = pd.concat([traj_GG, traj_GSD, traj_TS, traj_TG])
-    traj.to_csv('data/artificial_traj_mixed.csv', index=False)
-    rts.to_csv('data/artificial_rts_mixed.csv', index=False)
+    rts_single = pd.concat([rts_GG, rts_GSD, rts_TS, rts_TG])
+    traj_single = pd.concat([traj_GG, traj_GSD, traj_TS, traj_TG])
+    traj_single.to_csv('data/artificial_traj_mixed_single.csv', index=False)
+    rts_single.to_csv('data/artificial_rts_mixed_single.csv', index=False)
 
-""" traj_TG_GSD ,rts_TG_GSD= generate_traj_mixed(real_map_data, size=50, mode='TG-GSD')
+    traj_TG_GSD ,rts_TG_GSD= generate_traj_mixed(real_map_data, size=50, mode='TG-GSD')
     traj_GSD_TG ,rts_GSD_TG = generate_traj_mixed(real_map_data, size=50, mode='GSD-TG')
     traj_TS_TG ,rts_TS_TG = generate_traj_mixed(real_map_data, size=50, mode='TS-TG')
     traj_TG_TS ,rts_TG_TS = generate_traj_mixed(real_map_data, size=50, mode='TG-TS')
     traj_GSD_GG ,rts_GSD_GG = generate_traj_mixed(real_map_data, size=50, mode='GSD-GG')
-    traj_GG_GSD ,rts_GG_GSD = generate_traj_mixed(real_map_data, size=50, mode='GG-GSD')"""
+    traj_GG_GSD ,rts_GG_GSD = generate_traj_mixed(real_map_data, size=50, mode='GG-GSD')
+
+    rts_mult = pd.concat([rts_TG_GSD, rts_GSD_TG, rts_TS_TG, rts_TG_TS,rts_GSD_GG, rts_GG_GSD])
+    traj_mult = pd.concat([traj_TG_GSD, traj_GSD_TG, traj_TS_TG, traj_TG_TS, traj_GSD_GG, traj_GG_GSD])
+    traj_mult.to_csv('data/artificial_traj_mixed_mult.csv', index=False)
+    rts_mult.to_csv('data/artificial_rts_mixed_mult.csv', index=False)
+

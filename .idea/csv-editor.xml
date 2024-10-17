@@ -3,6 +3,13 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
+        <entry key="/data/artificial_rts_mixed.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/data/artificial_traj.csv">
           <value>
             <Attribute>
@@ -39,13 +46,6 @@
           </value>
         </entry>
         <entry key="/data/realWorldFeature.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="/data/realWorldMixedFeatures.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
